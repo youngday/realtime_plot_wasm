@@ -1,0 +1,11 @@
+[project]
+name = "realtime-plot-wasm-server"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "asyncio>=3.4.3",
+    "websocket>=0.2.1",
+    "websockets>=15.0.1",
+]

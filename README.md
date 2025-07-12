@@ -8,3 +8,9 @@ Run `cargo-leptos watch` (note the '-').
 ## out
 frame:30 fps
 ![alt text](demo.png)
+
+## plot data 
+websocket client  refresh data 
+## python server
+
+uv run /src/server.py

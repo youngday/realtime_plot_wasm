@@ -28,8 +28,11 @@ pub fn load_data() -> Vec<MyData> {  // Changed from Signal to Vec
         let rand_offset = rng.gen_range(-0.5..0.5);  // Larger random variation
         MyData::new(
             time,
-            (i as f64 * 0.1).sin() + rand_offset,  // y1 with noise
-            (i as f64 * 0.2).sin() * 0.8 + rand_offset  // y2 with different amplitude
+            // (i as f64 * 0.1).sin() + rand_offset,  // y1 with noise
+            // (i as f64 * 0.2).sin() * 0.8 + rand_offset  // y2 with different amplitude
+
+            1.0  ,  // y1 with noise
+            1.0  // y2 with different amplitude
         )
     }).collect()
 }
@@ -49,8 +52,12 @@ pub fn App() -> impl IntoView {
         
         let on_message = Closure::wrap(Box::new(move |e: MessageEvent| {
             if let Some(serialized) = e.data().as_string() {
+                console_log(&format!("Received data: {}", serialized));
                 if let Ok(new_data) = serde_json::from_str::<Vec<MyData>>(&serialized) {
+                    console_log(&format!("Parsed {} items", new_data.len()));
                     data.set(new_data);
+                } else {
+                    console_log("Failed to parse data");
                 }
             }
         }) as Box<dyn FnMut(MessageEvent)>);
@@ -66,8 +73,8 @@ pub fn App() -> impl IntoView {
                     let start = js_sys::Date::now();
                     data.set(load_data());
                     let duration = js_sys::Date::now() - start;
-                    console_log(&format!("Refresh took {:.2}ms", duration));
-                    console_log(&format!("now time: {:.2}ms", start));
+                    // console_log(&format!("Refresh took {:.2}ms", duration));
+                    // console_log(&format!("now time: {:.2}ms", start));
                 },
             std::time::Duration::from_millis(1), // Convert to milliseconds
             )
