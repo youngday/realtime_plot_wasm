@@ -3,10 +3,13 @@ use leptos_chartistry::*;
 use chrono::{DateTime, Utc, Duration};
 use rand::Rng;
 use web_sys::{console, js_sys};
-
-#[derive(Clone)]  // Add this attribute
+use web_sys::WebSocket;
+use wasm_bindgen::closure::Closure;
+use leptos::ev::MessageEvent;
+use wasm_bindgen::JsCast;
+#[derive(Clone, serde::Serialize, serde::Deserialize)]  // Add serde traits
 pub struct MyData {
-    time: DateTime<Utc>, // 使用DateTime类型作为时间
+    time: DateTime<Utc>,
     y1: f64,
     y2: f64,
 }
@@ -38,8 +41,24 @@ pub fn App() -> impl IntoView {
         .line(Line::new(|data: &MyData| data.y2).with_name("y2"));
     
     let data = RwSignal::new(load_data());
-    let (is_paused, set_paused) = signal(false); // 新增暂停状态
-    
+    let (is_paused, set_paused) = signal(false);
+
+    // 添加WebSocket连接
+    Effect::new(move |_| {
+        let ws: WebSocket = WebSocket::new("ws://localhost:8080/ws").expect("Failed to connect to WebSocket");
+        
+        let on_message = Closure::wrap(Box::new(move |e: MessageEvent| {
+            if let Some(serialized) = e.data().as_string() {
+                if let Ok(new_data) = serde_json::from_str::<Vec<MyData>>(&serialized) {
+                    data.set(new_data);
+                }
+            }
+        }) as Box<dyn FnMut(MessageEvent)>);
+        
+        ws.set_onmessage(Some(on_message.as_ref().unchecked_ref()));
+        on_message.forget();
+    });
+
     Effect::new(move |_| {
         if !is_paused.get() { // 只在未暂停时执行刷新
             let handle = set_interval_with_handle(
@@ -93,9 +112,8 @@ pub fn shell(options: LeptosOptions) -> impl IntoView {
             <head>
                 <meta charset="utf-8" />
                 <meta name="viewport" content="width=device-width, initial-scale=1" />
-                <AutoReload options=options.clone() />
-                <HydrationScripts options />
                 <MetaTags />
+                <HydrationScripts options />
             </head>
             <body>
                 <App/>
