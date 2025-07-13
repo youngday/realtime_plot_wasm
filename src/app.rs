@@ -86,7 +86,7 @@ pub fn App() -> impl IntoView {
             let handle = set_interval_with_handle(
                 move || {
                     let start = js_sys::Date::now();
-                    data.set(load_data());
+                    // data.set(load_data());
                     let duration = js_sys::Date::now() - start;
                     console_log(&format!("Refresh took {:.2}ms", duration));
                     console_log(&format!("now time: {:.2}ms", start));
