@@ -49,9 +49,10 @@ pub fn App() -> impl IntoView {
         let ws: WebSocket =
             WebSocket::new("ws://localhost:8080/ws").expect("Failed to connect to WebSocket");
 
+        let is_paused_clone = is_paused.clone();
         let on_message = Closure::wrap(Box::new(move |e: MessageEvent| {
-            if is_paused.get() {
-                return; // Skip processing if paused
+            if is_paused_clone.get_untracked() {  // Use get_untracked() since we don't need reactivity here
+                return;
             }
             
             if let Some(serialized) = e.data().as_string() {
@@ -66,7 +67,7 @@ pub fn App() -> impl IntoView {
 
         Effect::new(move |_| {
             if !is_paused.get() {
-                let handle = set_interval_with_handle(
+                let _handle = set_interval_with_handle(
                     move || {
                         // This can be removed since we're using WebSocket updates
                     },
@@ -104,7 +105,7 @@ pub fn App() -> impl IntoView {
     view! {
         <h1>"时间序列图表"</h1>
         <button on:click=move |_| set_paused.update(|p| *p = !*p)>
-            {move || if is_paused.get() { "继续" } else { "暂停" }}
+            {move || if is_paused.get(){ "继续" } else { "暂停" }}
         </button>
         <Chart
             aspect_ratio=AspectRatio::from_outer_height(300.0, 1.2)
