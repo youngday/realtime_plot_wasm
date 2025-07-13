@@ -50,8 +50,11 @@ pub fn App() -> impl IntoView {
             WebSocket::new("ws://localhost:8080/ws").expect("Failed to connect to WebSocket");
 
         let on_message = Closure::wrap(Box::new(move |e: MessageEvent| {
+            if is_paused.get() {
+                return; // Skip processing if paused
+            }
+            
             if let Some(serialized) = e.data().as_string() {
-                // console_log(&format!("Received data: {}", serialized));
                 if let Ok(new_data) = serde_json::from_str::<Vec<MyData>>(&serialized) {
                     console_log(&format!("Parsed {} items", new_data.len()));
                     data.set(new_data);
@@ -60,6 +63,18 @@ pub fn App() -> impl IntoView {
                 }
             }
         }) as Box<dyn FnMut(MessageEvent)>);
+
+        Effect::new(move |_| {
+            if !is_paused.get() {
+                let handle = set_interval_with_handle(
+                    move || {
+                        // This can be removed since we're using WebSocket updates
+                    },
+                    std::time::Duration::from_millis(3000),
+                )
+                .expect("Could not set interval");
+            }
+        });
 
         ws.set_onmessage(Some(on_message.as_ref().unchecked_ref()));
         on_message.forget();
