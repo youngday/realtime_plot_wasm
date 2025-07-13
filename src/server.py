@@ -14,13 +14,13 @@ async def handle_client(websocket):
             time = start_time + timedelta(hours=i*2)
             data.append({
                 "time": time.isoformat() + "Z",
-                "y1": i+cnt,
-                "y2": i+cnt
+                "y1": math.sin(i/10 + cnt) + random.uniform(-0.2, 0.2),  # Sine wave with random noise
+                "y2": math.sin(i/5 + cnt) * 0.8 + random.uniform(-0.1, 0.1)  # Different frequency sine wave
             })
-        cnt+=1.0
-        
+        cnt+=0.1
+        # print("data.len=",len(data))
         await websocket.send(json.dumps(data))
-        await asyncio.sleep(1)
+        await asyncio.sleep(0.01)
 
 async def main():
     async with websockets.serve(handle_client, "localhost", 8080):
