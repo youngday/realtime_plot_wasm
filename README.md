@@ -9,8 +9,22 @@ Run `cargo-leptos watch` (note the '-').
 frame:30 fps
 ![alt text](demo.png)
 
-## plot data 
-websocket client  refresh data 
-## python server
+## plot
+## NOTE:
+we can use websocket client to refresh data and plot in real time.
 
+### client
+websocket client  refresh data 
+```sh
+cargo leptos watch
+```
+### python server
+```sh
 uv run /src/server.py
+```
+### rust server
+```sh
+cargo run --example server
+```
+
+
