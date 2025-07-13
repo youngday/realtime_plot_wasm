@@ -17,7 +17,7 @@ async def handle_client(websocket):
                 "y1": math.sin(i/10 + cnt) + random.uniform(-0.2, 0.2),  # Sine wave with random noise
                 "y2": math.sin(i/5 + cnt) * 0.8 + random.uniform(-0.1, 0.1)  # Different frequency sine wave
             })
-        cnt+=0.1
+        cnt+=1.0
         # print("data.len=",len(data))
         await websocket.send(json.dumps(data))
         await asyncio.sleep(0.01)

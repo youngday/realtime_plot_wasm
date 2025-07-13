@@ -5,7 +5,6 @@ use leptos_chartistry::*;
 use rand::Rng;
 use wasm_bindgen::closure::Closure;
 use wasm_bindgen::JsCast;
-use web_sys::js_sys;
 use web_sys::WebSocket;
 #[derive(Clone, serde::Serialize, serde::Deserialize)] // Add serde traits
 pub struct MyData {
@@ -27,13 +26,11 @@ pub fn load_data() -> Vec<MyData> {
     (0..=100)
         .map(|i| {
             let time = start_time + Duration::hours(i * 2);
-            // let rand_offset = rng.gen_range(-0.5..0.5); // Larger random variation
+            let rand_offset = rng.gen_range(-0.5..0.5); // Larger random variation
             MyData::new(
                 time,
-                // (i as f64 * 0.1).sin() + rand_offset,  // y1 with noise
-                // (i as f64 * 0.2).sin() * 0.8 + rand_offset  // y2 with different amplitude
-                1.0, // y1 with noise
-                1.0, // y2 with different amplitude
+                (i as f64 * 0.1).sin() + rand_offset, // y1 with noise
+                (i as f64 * 0.2).sin() * 0.8 + rand_offset, // y2 with different amplitude
             )
         })
         .collect()
@@ -45,9 +42,8 @@ pub fn App() -> impl IntoView {
         .line(Line::new(|data: &MyData| data.y1).with_name("y1"))
         .line(Line::new(|data: &MyData| data.y2).with_name("y2"));
 
-    let data = RwSignal::new(load_data());
+    let data: RwSignal<Vec<MyData>> = RwSignal::new(load_data());
     let (is_paused, set_paused) = signal(false);
-
     // 添加WebSocket连接
     Effect::new(move |_| {
         let ws: WebSocket =
@@ -55,7 +51,7 @@ pub fn App() -> impl IntoView {
 
         let on_message = Closure::wrap(Box::new(move |e: MessageEvent| {
             if let Some(serialized) = e.data().as_string() {
-                console_log(&format!("Received data: {}", serialized));
+                // console_log(&format!("Received data: {}", serialized));
                 if let Ok(new_data) = serde_json::from_str::<Vec<MyData>>(&serialized) {
                     console_log(&format!("Parsed {} items", new_data.len()));
                     data.set(new_data);
@@ -74,13 +70,13 @@ pub fn App() -> impl IntoView {
             // 只在未暂停时执行刷新
             let handle = set_interval_with_handle(
                 move || {
-                    // let start = js_sys::Date::now();
-                    // data.set(load_data());
-                    // let duration = js_sys::Date::now() - start;
-                    // console_log(&format!("Refresh took {:.2}ms", duration));
-                    // console_log(&format!("now time: {:.2}ms", start));
+                    let start = js_sys::Date::now();
+                    data.set(load_data());
+                    let duration = js_sys::Date::now() - start;
+                    console_log(&format!("Refresh took {:.2}ms", duration));
+                    console_log(&format!("now time: {:.2}ms", start));
                 },
-                std::time::Duration::from_millis(1), // Convert to milliseconds
+                std::time::Duration::from_millis(30), // Convert to milliseconds
             )
             .expect("Could not create interval");
 
