@@ -18,7 +18,7 @@ leptos_router.version = "0.8"
 leptos-use = "0.16.0"
 log = "0.4"
 tokio = { version = "1.47", features = ["full"], optional = true }
-tokio-tungstenite = "0.20"
+tokio-tungstenite = "0.26"
 futures-util = "0.3"
 tower = { version = "0.5", optional = true }
 tower-http = { version = "0.6", features = ["fs"], optional = true }
@@ -63,7 +63,7 @@ path = "examples/server.rs"
 
 [dev-dependencies]
 tokio = { version = "1.47", features = ["full"] }
-tokio-tungstenite = "0.20"
+tokio-tungstenite = "0.26"
 futures-util = "0.3"
 
 
