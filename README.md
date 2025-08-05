@@ -20,7 +20,8 @@ cargo leptos watch
 ```
 ### python server
 ```sh
-uv run /src/server.py
+uv run 
+src/server.py
 ```
 ### rust server
 ```sh
