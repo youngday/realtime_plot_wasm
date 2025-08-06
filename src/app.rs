@@ -27,6 +27,7 @@ pub fn load_data() -> Vec<MyData> {
         .map(|i| {
             let time = start_time + Duration::hours(i * 2);
             let rand_offset = rng.gen_range(-0.5..0.5); // Larger random variation
+            // let rand_offset = 0.0; // Larger random variation
             MyData::new(
                 time,
                 (i as f64 * 0.1).sin() + rand_offset, // y1 with noise
