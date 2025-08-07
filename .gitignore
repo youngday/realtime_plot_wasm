@@ -1,4 +1,6 @@
 target/
 Cargo.lock
-venv/
 uv.lock
+.marscode/
+.venv
+
