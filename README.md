@@ -23,7 +23,7 @@ cargo leptos watch
 uv run 
 src/server.py
 ```
-### rust server
+### rust axum websocket server
 ```sh
 cargo run --example server
 ```
