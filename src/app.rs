@@ -48,7 +48,7 @@ pub fn App() -> impl IntoView {
     // 添加WebSocket连接
     Effect::new(move |_| {
         let ws: WebSocket =
-            WebSocket::new("ws://localhost:8080/ws").expect("Failed to connect to WebSocket");
+            WebSocket::new("ws://127.0.0.1:8080/ws").expect("Failed to connect to WebSocket");
 
         let is_paused_clone = is_paused.clone();
         let on_message = Closure::wrap(Box::new(move |e: MessageEvent| {

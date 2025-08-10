@@ -53,8 +53,9 @@ axum = { version = "0.8", features = ["ws"] }
 tokio = { version = "1.47", features = ["full"] }
 tokio-tungstenite = "0.26"
 futures-util = "0.3"
-rand = "0.8"          # 移到常规依赖，两端都能用
-# getrandom = { version = "0.2", optional = true }
+rand = "0.8"
+env_logger = "0.11"
+
 [[example]]
 name = "server"
 path = "examples/server.rs"

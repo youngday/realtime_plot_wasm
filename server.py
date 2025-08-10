@@ -18,13 +18,13 @@ async def handle_client(websocket):
                 "y2": math.sin(i/5 + cnt) * 0.8 + random.uniform(-0.1, 0.1)  # Different frequency sine wave
             })
         cnt+=1.0
-        # print("data.len=",len(data))
+        print("data.len=",len(data))
         await websocket.send(json.dumps(data))
         await asyncio.sleep(0.01)
 
 async def main():
-    async with websockets.serve(handle_client, "localhost", 8080):
-        print("WebSocket server started on ws://localhost:8080")
+    async with websockets.serve(handle_client, "127.0.0.1", 8080):
+        print("WebSocket server started on ws://127.0.0.1:8080")
         await asyncio.Future()  # run forever
 
 if __name__ == "__main__":
