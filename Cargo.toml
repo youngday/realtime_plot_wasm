@@ -26,7 +26,7 @@ leptos-use = "0.16"
 futures-util = "0.3"
 tower = { version = "0.5", optional = true }
 tower-http = { version = "0.6", features = ["fs"], optional = true }
-wasm-bindgen = "0.2.100"
+wasm-bindgen = "0.2.106"
 web-sys = { version = "0.3", features = ["console", "Window","MessageEvent", "WebSocket"] }
 js-sys = "0.3"
 getrandom = { version = "0.2",optional = true }
@@ -50,17 +50,12 @@ lib-features = ["hydrate"]
 
 [dev-dependencies]
 axum = { version = "0.8", features = ["ws"] }
-tokio = { version = "1.47", features = ["full"] }
-tokio-tungstenite = "0.26"
+tokio = { version = "1.48", features = ["full"] }
+tokio-tungstenite = "0.28"
 futures-util = "0.3"
-rand = "0.8"
+rand = "0.9"
 env_logger = "0.11"
 
 [[example]]
 name = "server"
 path = "examples/server.rs"
-
-
-
-
-
