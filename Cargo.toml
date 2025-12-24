@@ -1,6 +1,7 @@
 [package]
-name = "my_example_ssr"
+name = "my_ssr"
 edition = "2024"
+version = "0.1.0"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
@@ -53,7 +54,7 @@ axum = { version = "0.8", features = ["ws"] }
 tokio = { version = "1.48", features = ["full"] }
 tokio-tungstenite = "0.28"
 futures-util = "0.3"
-rand = "0.9"
+rand = "0.8"
 env_logger = "0.11"
 
 [[example]]
