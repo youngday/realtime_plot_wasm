@@ -1,12 +1,12 @@
 use axum::{
+    Router,
     extract::ws::{WebSocket, WebSocketUpgrade},
     response::Response,
     routing::get,
-    Router,
 };
 use chrono::{Duration, Utc};
 use log::{error, info};
-use rand::{distributions::Uniform, rngs::StdRng, Rng, SeedableRng};
+use rand::{Rng, SeedableRng, rngs::StdRng};
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
 
@@ -26,8 +26,7 @@ async fn ws_handler(
 }
 
 async fn handle_socket(mut socket: WebSocket, rng: Arc<Mutex<StdRng>>) {
-    let noise_range = Uniform::new(-0.2, 0.2);
-    let noise_range_y2 = Uniform::new(-0.1, 0.1);
+    // Using gen_range instead of Uniform for simpler rand 0.9 usage
     let mut counter = 0.0;
     let base_time = Utc::now() - Duration::days(7);
 
@@ -41,8 +40,8 @@ async fn handle_socket(mut socket: WebSocket, rng: Arc<Mutex<StdRng>>) {
             let mut rng = rng.lock().unwrap();
             for i in 0..100 {
                 let t = base_time + Duration::hours(i * 2);
-                let y1 = (i as f64 / 10.0 + counter).sin() + rng.sample(noise_range);
-                let y2 = (i as f64 / 5.0 + counter).sin() * 0.8 + rng.sample(noise_range_y2);
+                let y1 = (i as f64 / 10.0 + counter).sin() + rng.random_range(-0.2..0.2);
+                let y2 = (i as f64 / 5.0 + counter).sin() * 0.8 + rng.random_range(-0.1..0.1);
                 buf.push(MyData { time: t, y1, y2 });
             }
         }
@@ -73,7 +72,7 @@ async fn handle_socket(mut socket: WebSocket, rng: Arc<Mutex<StdRng>>) {
 async fn main() {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
 
-    let rng = Arc::new(Mutex::new(StdRng::from_entropy()));
+    let rng = Arc::new(Mutex::new(StdRng::seed_from_u64(42)));
     let app = Router::new()
         .route("/ws", get(ws_handler))
         .layer(axum::extract::Extension(rng));

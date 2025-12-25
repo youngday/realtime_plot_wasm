@@ -3,8 +3,8 @@ use leptos::ev::MessageEvent;
 use leptos::{leptos_dom::logging::console_log, prelude::*};
 use leptos_chartistry::*;
 use rand::Rng;
-use wasm_bindgen::closure::Closure;
 use wasm_bindgen::JsCast;
+use wasm_bindgen::closure::Closure;
 use web_sys::WebSocket;
 #[derive(Clone, serde::Serialize, serde::Deserialize)] // Add serde traits
 pub struct MyData {
@@ -21,12 +21,12 @@ impl MyData {
 
 pub fn load_data() -> Vec<MyData> {
     // Changed from Signal to Vec
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let start_time = Utc::now() - Duration::days(7);
     (0..=100)
         .map(|i| {
             let time = start_time + Duration::hours(i * 2);
-            let rand_offset = rng.gen_range(-0.5..0.5); // Larger random variation
+            let rand_offset = rng.random_range(-0.5..0.5); // Larger random variation
             // let rand_offset = 0.0; // Larger random variation
             MyData::new(
                 time,
@@ -52,10 +52,11 @@ pub fn App() -> impl IntoView {
 
         let is_paused_clone = is_paused.clone();
         let on_message = Closure::wrap(Box::new(move |e: MessageEvent| {
-            if is_paused_clone.get_untracked() {  // Use get_untracked() since we don't need reactivity here
+            if is_paused_clone.get_untracked() {
+                // Use get_untracked() since we don't need reactivity here
                 return;
             }
-            
+
             if let Some(serialized) = e.data().as_string() {
                 if let Ok(new_data) = serde_json::from_str::<Vec<MyData>>(&serialized) {
                     console_log(&format!("Parsed {} items", new_data.len()));

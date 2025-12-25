@@ -12,7 +12,7 @@ tokio = { version = "1.48", features = ["full"], optional = true }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 chrono = { version = "0.4", features = ["serde"] }
-rand = "0.8"
+rand = "0.9"
 log = "0.4"
 console_error_panic_hook = "0.1"
 console_log = "1.0"
@@ -30,9 +30,9 @@ tower-http = { version = "0.6", features = ["fs"], optional = true }
 wasm-bindgen = "0.2.106"
 web-sys = { version = "0.3", features = ["console", "Window","MessageEvent", "WebSocket"] }
 js-sys = "0.3"
-getrandom = { version = "0.2",optional = true }
+getrandom = { version = "0.3",optional = true }
 [features]
-hydrate = ["leptos/hydrate", "getrandom/js"]
+hydrate = ["leptos/hydrate", "getrandom/wasm_js"]
 ssr = [
   "dep:axum",
   "dep:leptos_axum",
@@ -54,8 +54,9 @@ axum = { version = "0.8", features = ["ws"] }
 tokio = { version = "1.48", features = ["full"] }
 tokio-tungstenite = "0.28"
 futures-util = "0.3"
-rand = "0.8"
+rand = "0.9"
 env_logger = "0.11"
+
 
 [[example]]
 name = "server"
