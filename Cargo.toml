@@ -18,10 +18,12 @@ console_error_panic_hook = "0.1"
 console_log = "1.0"
 leptos = "0.8"
 leptos_axum = { version = "0.8", optional = true }
-leptos-chartistry = "0.2"
+# leptos-chartistry = "0.2"
+# leptos-chartistry = { git = "https://github.com/rust-adventure/leptos-chartistry", rev = "abc123def" }
+leptos-chartistry = { git = "https://github.com/youngday/leptos-chartistry"}
 leptos_meta = "0.8"
 leptos_router.version = "0.8"
-leptos-use = "0.18"
+leptos-use = "0.19"
 wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4"
 futures-util = "0.3"
