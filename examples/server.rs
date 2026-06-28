@@ -6,7 +6,7 @@ use axum::{
 };
 use chrono::{Duration, Utc};
 use log::{error, info};
-use rand::{Rng, SeedableRng, rngs::StdRng};
+use rand::{RngExt, SeedableRng, rngs::StdRng};
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
 

@@ -2,7 +2,7 @@ use chrono::{DateTime, Duration, Utc};
 use leptos::ev::MessageEvent;
 use leptos::{leptos_dom::logging::console_log, prelude::*};
 use leptos_chartistry::*;
-use rand::Rng;
+use rand::RngExt;
 use wasm_bindgen::JsCast;
 use wasm_bindgen::closure::Closure;
 use web_sys::WebSocket;
