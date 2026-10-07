@@ -13,8 +13,10 @@ SEND_INTERVAL_SECS = 0.1
 
 async def handle_client(websocket):
     cnt = 0.0
+    # Computed once, like `examples/server.rs`: recomputing it per frame slid the
+    # whole x-axis window forward with the wall clock.
+    start_time = datetime.now(timezone.utc) - timedelta(days=7)
     while True:
-        start_time = datetime.now(timezone.utc) - timedelta(days=7)
         data = []
         for i in range(100):
             time = start_time + timedelta(hours=i * 2)

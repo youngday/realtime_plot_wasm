@@ -8,7 +8,14 @@ async fn main() {
     use my_ssr::app::*;
 
     let conf = get_configuration(None).unwrap();
-    let addr = conf.leptos_options.site_addr;
+    // `leptos_config` falls back to 127.0.0.1:3000, but that port is already held
+    // by another service on this host (Gitea, via `pasta`). Default to 3111
+    // instead; an explicit `LEPTOS_SITE_ADDR` -- which `cargo leptos` sets from
+    // `[package.metadata.leptos] site-addr` -- still takes precedence.
+    let mut addr = conf.leptos_options.site_addr;
+    if std::env::var_os("LEPTOS_SITE_ADDR").is_none() {
+        addr.set_port(3111);
+    }
     let leptos_options = conf.leptos_options;
     // Generate the list of routes in your Leptos App
     let routes = generate_route_list(App);
