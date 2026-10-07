@@ -6,12 +6,16 @@ more info and start demo ,please check "leptos" and "leptos-chartistry".
 ## run
 Run `cargo-leptos watch` (note the '-').
 ## out
-frame:30 fps
+The chart redraws once per WebSocket frame, ~10 fps with the bundled feeds.
 ![alt text](demo.png)
 
 ## plot
 ## NOTE:
 we can use websocket client to refresh data and plot in real time.
+
+The page is served on `127.0.0.1:3000`, and the feed endpoint is
+`ws://127.0.0.1:8080/ws` (see `WS_URL` in `src/app.rs`), so run the client and one
+of the servers below side by side.
 
 ### client
 websocket client  refresh data 
@@ -20,8 +24,7 @@ cargo leptos watch
 ```
 ### python server
 ```sh
-uv run 
-src/server.py
+uv run server.py
 ```
 ### rust axum websocket server
 ```sh

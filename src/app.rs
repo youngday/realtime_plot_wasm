@@ -26,7 +26,10 @@ impl MyData {
 pub fn load_data() -> Vec<MyData> {
     let mut rng = rand::rng();
     let start_time = Utc::now() - Duration::days(7);
-    (0..=100)
+    // 100 points, matching the frame size both feeds send
+    // (`examples/server.rs` and `server.py`), so the pre-hydration render lines
+    // up with the first WebSocket frame instead of briefly showing one extra point.
+    (0..100)
         .map(|i| {
             let time = start_time + Duration::hours(i * 2);
             let rand_offset = rng.random_range(-0.5..0.5);

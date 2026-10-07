@@ -5,7 +5,7 @@ use axum::{
     routing::get,
 };
 use chrono::{Duration, Utc};
-use log::{error, info};
+use log::{debug, error, info};
 use rand::{RngExt, SeedableRng, rngs::StdRng};
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
@@ -30,10 +30,10 @@ async fn handle_socket(mut socket: WebSocket, rng: Arc<Mutex<StdRng>>) {
     let mut counter = 0.0;
     let base_time = Utc::now() - Duration::days(7);
 
-    // 删掉下面这一行，让服务器连接后立刻开始发送
-    // let _ = socket.next().await;
     let mut buf = Vec::with_capacity(100);
-    let mut loop_cnt = 0;
+    let mut loop_cnt = 0u64;
+    // Feed until the client goes away: the previous `loop_cnt > 1000` guard made
+    // the demo silently stop after ~100 seconds.
     loop {
         buf.clear();
         {
@@ -46,10 +46,9 @@ async fn handle_socket(mut socket: WebSocket, rng: Arc<Mutex<StdRng>>) {
             }
         }
 
-        counter += 0.1;
-        if counter > 2.0 {
-            counter = 0.0;
-        }
+        // Advance the phase and wrap at 2π so the animation loops without the
+        // jump the previous `> 2.0 -> 0.0` reset produced.
+        counter = (counter + 0.1) % std::f64::consts::TAU;
 
         let json = serde_json::to_string(&buf).unwrap();
         if let Err(e) = socket
@@ -59,11 +58,9 @@ async fn handle_socket(mut socket: WebSocket, rng: Arc<Mutex<StdRng>>) {
             error!("Send error: {}", e);
             break;
         }
-        info!("loop_cnt: {} ,Sent {} items", loop_cnt, buf.len());
+        // Was `info!`, i.e. ten log lines per second on the default filter.
+        debug!("loop_cnt: {} ,Sent {} items", loop_cnt, buf.len());
         loop_cnt += 1;
-        if loop_cnt > 1000 {
-            break;
-        }
         tokio::time::sleep(std::time::Duration::from_millis(100)).await;
     }
 }

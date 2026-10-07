@@ -6,6 +6,10 @@ from datetime import datetime, timedelta, timezone
 
 import websockets
 
+# Seconds between frames. Matches `examples/server.rs` (100 ms); the previous
+# 0.01 s pushed 100 points at 100 Hz, i.e. ten times the chart's redraw rate.
+SEND_INTERVAL_SECS = 0.1
+
 
 async def handle_client(websocket):
     cnt = 0.0
@@ -16,7 +20,11 @@ async def handle_client(websocket):
             time = start_time + timedelta(hours=i * 2)
             data.append(
                 {
-                    "time": time.isoformat() + "Z",
+                    # `isoformat()` on a tz-aware datetime already ends in
+                    # "+00:00"; appending "Z" on top produced
+                    # "...+00:00Z", which the Rust client's RFC 3339 parser
+                    # rejects as trailing input, dropping every frame.
+                    "time": time.isoformat().replace("+00:00", "Z"),
                     "y1": math.sin(i / 10 + cnt)
                     + random.uniform(-0.2, 0.2),  # Sine wave with random noise
                     "y2": math.sin(i / 5 + cnt) * 0.8
@@ -24,9 +32,8 @@ async def handle_client(websocket):
                 }
             )
         cnt += 1.0
-        print("data.len=", len(data))
         await websocket.send(json.dumps(data))
-        await asyncio.sleep(0.01)
+        await asyncio.sleep(SEND_INTERVAL_SECS)
 
 
 async def main():
