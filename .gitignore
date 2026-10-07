@@ -1,6 +1,5 @@
 target/
 Cargo.lock
 uv.lock
-.marscode/
 .venv
-
+.codewhale/
