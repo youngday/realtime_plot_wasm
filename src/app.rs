@@ -1,12 +1,16 @@
 use chrono::{DateTime, Duration, Utc};
 use leptos::ev::MessageEvent;
-use leptos::{leptos_dom::logging::console_log, prelude::*};
+use leptos::prelude::*;
 use leptos_chartistry::*;
 use rand::RngExt;
 use wasm_bindgen::JsCast;
 use wasm_bindgen::closure::Closure;
 use web_sys::WebSocket;
-#[derive(Clone, serde::Serialize, serde::Deserialize)] // Add serde traits
+
+/// Data feed endpoint. Matches `examples/server.rs` and `server.py`.
+const WS_URL: &str = "ws://127.0.0.1:8080/ws";
+
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub struct MyData {
     time: DateTime<Utc>,
     y1: f64,
@@ -20,21 +24,39 @@ impl MyData {
 }
 
 pub fn load_data() -> Vec<MyData> {
-    // Changed from Signal to Vec
     let mut rng = rand::rng();
     let start_time = Utc::now() - Duration::days(7);
     (0..=100)
         .map(|i| {
             let time = start_time + Duration::hours(i * 2);
-            let rand_offset = rng.random_range(-0.5..0.5); // Larger random variation
-            // let rand_offset = 0.0; // Larger random variation
+            let rand_offset = rng.random_range(-0.5..0.5);
             MyData::new(
                 time,
-                (i as f64 * 0.1).sin() + rand_offset, // y1 with noise
-                (i as f64 * 0.2).sin() * 0.8 + rand_offset, // y2 with different amplitude
+                (i as f64 * 0.1).sin() + rand_offset,
+                (i as f64 * 0.2).sin() * 0.8 + rand_offset,
             )
         })
         .collect()
+}
+
+/// Owns the WebSocket and its message callback.
+///
+/// Storing this in a `StoredValue::new_local` ties both to the reactive owner, so
+/// they are torn down when the component is disposed. The previous code used
+/// `Closure::forget()`, which leaked the callback (and everything it captured)
+/// permanently, and never closed the socket.
+struct WsFeed {
+    ws: WebSocket,
+    _on_message: Closure<dyn FnMut(MessageEvent)>,
+}
+
+impl Drop for WsFeed {
+    fn drop(&mut self) {
+        // Clear the handler before the closure is released, so the browser can
+        // never call into a closure that wasm-bindgen has already invalidated.
+        self.ws.set_onmessage(None);
+        let _ = self.ws.close();
+    }
 }
 
 #[component]
@@ -45,74 +67,63 @@ pub fn App() -> impl IntoView {
 
     let data: RwSignal<Vec<MyData>> = RwSignal::new(load_data());
     let (is_paused, set_paused) = signal(false);
-    // 添加WebSocket连接
-    Effect::new(move |_| {
-        let ws: WebSocket =
-            WebSocket::new("ws://127.0.0.1:8080/ws").expect("Failed to connect to WebSocket");
 
-        let is_paused_clone = is_paused.clone();
-        let on_message = Closure::wrap(Box::new(move |e: MessageEvent| {
-            if is_paused_clone.get_untracked() {
-                // Use get_untracked() since we don't need reactivity here
+    // One effect owns the WebSocket for the lifetime of the component.
+    Effect::new(move |_| {
+        let ws = match WebSocket::new(WS_URL) {
+            Ok(ws) => ws,
+            Err(err) => {
+                // Previously `.expect(..)`, which took the whole page down when the
+                // feed was not running.
+                log::error!("WebSocket connect to {WS_URL} failed: {err:?}");
                 return;
             }
+        };
 
-            if let Some(serialized) = e.data().as_string() {
-                if let Ok(new_data) = serde_json::from_str::<Vec<MyData>>(&serialized) {
-                    console_log(&format!("Parsed {} items", new_data.len()));
-                    data.set(new_data);
-                } else {
-                    console_log("Failed to parse data");
-                }
+        let on_message = Closure::<dyn FnMut(MessageEvent)>::new(move |e: MessageEvent| {
+            // `is_paused` is `Copy`; reading it untracked keeps this callback out of
+            // the reactive graph (it is driven by the browser, not by a scope).
+            if is_paused.get_untracked() {
+                return;
             }
-        }) as Box<dyn FnMut(MessageEvent)>);
-
-        Effect::new(move |_| {
-            if !is_paused.get() {
-                let _handle = set_interval_with_handle(
-                    move || {
-                        // This can be removed since we're using WebSocket updates
-                    },
-                    std::time::Duration::from_millis(3000),
-                )
-                .expect("Could not set interval");
+            let Some(frame) = e.data().as_string() else {
+                return;
+            };
+            match serde_json::from_str::<Vec<MyData>>(&frame) {
+                Ok(new_data) => {
+                    // Was a `console_log(format!(..))` on every frame; `trace!` is
+                    // below the logger level in `hydrate()`, so it costs nothing by
+                    // default but stays available when debugging.
+                    log::trace!("received {} points", new_data.len());
+                    data.set(new_data);
+                }
+                Err(err) => log::warn!("dropping malformed frame: {err}"),
             }
         });
 
         ws.set_onmessage(Some(on_message.as_ref().unchecked_ref()));
-        on_message.forget();
-    });
 
-    Effect::new(move |_| {
-        if !is_paused.get() {
-            // 只在未暂停时执行刷新
-            let handle = set_interval_with_handle(
-                move || {
-                    let start = js_sys::Date::now();
-                    // data.set(load_data());
-                    let duration = js_sys::Date::now() - start;
-                    console_log(&format!("Refresh took {:.2}ms", duration));
-                    console_log(&format!("now time: {:.2}ms", start));
-                },
-                std::time::Duration::from_millis(30), // Convert to milliseconds
-            )
-            .expect("Could not create interval");
-
-            on_cleanup(move || {
-                handle.clear();
-            });
-        }
+        // Hand ownership to the reactive arena: `WsFeed::drop` runs on disposal.
+        // (`on_cleanup` is not usable here -- it requires `Send + Sync`, and browser
+        // handles are neither.)
+        let _feed = StoredValue::new_local(WsFeed {
+            ws,
+            _on_message: on_message,
+        });
     });
 
     view! {
         <h1>"时间序列图表"</h1>
         <button on:click=move |_| set_paused.update(|p| *p = !*p)>
-            {move || if is_paused.get(){ "继续" } else { "暂停" }}
+            {move || if is_paused.get() { "继续" } else { "暂停" }}
         </button>
         <Chart
             aspect_ratio=AspectRatio::from_outer_height(300.0, 1.2)
             series=series
-            data=Signal::derive(move || data.get())
+            // `RwSignal` converts straight into the `Signal` prop, so the extra
+            // `Signal::derive(move || data.get())` memo (one full Vec clone per
+            // frame) is gone.
+            data=data
             top=RotatedLabel::middle("时间序列数据")
             left=TickLabels::aligned_floats()
             bottom=Legend::end()
